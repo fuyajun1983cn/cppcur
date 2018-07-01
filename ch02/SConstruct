@@ -1,0 +1,8 @@
+
+
+env = Environment(CPPFLAGS="-std=c++0x")
+
+t1 = env.Program(target='threadtest', source=['threadtest.cpp'])
+t2 = env.Program(target="threadtest2", source=['threadtest2.cpp'])
+
+Default(t2) #make it the default target

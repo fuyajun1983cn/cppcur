@@ -1,0 +1,396 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Managing threads &mdash; cppcur 1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="C++ Concurrency in Action Learning Notes" href="index.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> cppcur
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Managing threads</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#basic-thread-management">Basic thread management</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#launching-a-thread">Launching a thread</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#waiting-for-a-thread-to-complete">Waiting for a thread to complete</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#running-threads-in-the-background">Running threads in the background</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#passing-arguments-to-a-thread-function">Passing arguments to a thread function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#transferring-ownership-of-a-thread">Transferring ownership of a thread</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#choosing-the-number-of-threads-at-runtime">Choosing the number of threads at runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#identifying-threads">Identifying threads</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">cppcur</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Managing threads</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/ch02.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="managing-threads">
+<h1>Managing threads<a class="headerlink" href="#managing-threads" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="basic-thread-management">
+<h2>Basic thread management<a class="headerlink" href="#basic-thread-management" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="launching-a-thread">
+<h3>Launching a thread<a class="headerlink" href="#launching-a-thread" title="Permalink to this headline">¶</a></h3>
+<p>Starting a thread using the C++ Thread Library always
+boils down to constructing a std::thread object:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;thread&gt;</span><span class="cp"></span>
+
+<span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="p">;</span>
+
+<span class="kt">void</span> <span class="nf">do_some_work</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="n">cout</span><span class="o">&lt;&lt;</span><span class="s">&quot;I&#39;m doing some work in the thread.&quot;</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="n">my_thread</span><span class="p">(</span><span class="n">do_some_work</span><span class="p">);</span>
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>As with much of the C++ Standard Library, <code class="docutils literal notranslate"><span class="pre">std::thread</span></code> works with any
+<strong>callable</strong> type, so you can pass an instance of a class with a function call operator to the
+<code class="docutils literal notranslate"><span class="pre">std::thread</span></code> constructor instead:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">background_task</span>
+<span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+<span class="kt">void</span> <span class="k">operator</span><span class="p">()()</span> <span class="k">const</span>
+<span class="p">{</span>
+<span class="n">do_something</span><span class="p">();</span>
+<span class="n">do_something_else</span><span class="p">();</span>
+<span class="p">}</span>
+<span class="p">};</span>
+<span class="n">background_task</span> <span class="n">f</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="n">my_thread</span><span class="p">(</span><span class="n">f</span><span class="p">);</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">One thing to consider when passing a function object to the thread constructor
+is to avoid what is dubbed <strong>C++’s most vexing parse</strong>.</p>
+</div>
+<p>The following are wrong:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="n">my_thread</span><span class="p">(</span><span class="n">background_task</span><span class="p">());</span>
+</pre></div>
+</div>
+<p>Using the following syntax instead:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="n">my_thread</span><span class="p">((</span><span class="n">background_task</span><span class="p">()));</span>
+<span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="n">my_thread</span><span class="p">{</span><span class="n">background_task</span><span class="p">()};</span>
+</pre></div>
+</div>
+<p>Using a lambda expression:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="n">my_thread</span><span class="p">([](</span>
+       <span class="n">do_something</span><span class="p">();</span>
+       <span class="n">do_something_else</span><span class="p">();</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="waiting-for-a-thread-to-complete">
+<h3>Waiting for a thread to complete<a class="headerlink" href="#waiting-for-a-thread-to-complete" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">join()</span></code> is simple and brute force—either you wait for a thread to finish or you
+don’t. If you need more fine-grained control over waiting for a thread, such as to
+check whether a thread is finished, or to wait only a certain period of time, then you
+have to use alternative mechanisms such as condition variables and futures.</p>
+<p>you can call join() only once for a given thread; once you’ve called join(), the std::thread
+object is no longer joinable, and joinable() will return false.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;thread&gt;</span><span class="cp"></span>
+
+<span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="p">;</span>
+
+<span class="k">class</span> <span class="nc">thread_guard</span>
+<span class="p">{</span>
+  <span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="o">&amp;</span> <span class="n">t</span><span class="p">;</span>
+<span class="k">public</span><span class="o">:</span>
+  <span class="k">explicit</span> <span class="n">thread_guard</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="o">&amp;</span> <span class="n">t_</span><span class="p">)</span><span class="o">:</span>
+    <span class="n">t</span><span class="p">(</span><span class="n">t_</span><span class="p">)</span>
+  <span class="p">{}</span>
+  <span class="o">~</span><span class="n">thread_guard</span><span class="p">()</span>
+  <span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">t</span><span class="p">.</span><span class="n">joinable</span><span class="p">())</span>
+      <span class="p">{</span>
+        <span class="n">t</span><span class="p">.</span><span class="n">join</span><span class="p">();</span>
+      <span class="p">}</span>
+  <span class="p">}</span>
+  <span class="n">thread_guard</span><span class="p">(</span><span class="n">thread_guard</span> <span class="k">const</span><span class="o">&amp;</span><span class="p">)</span><span class="o">=</span><span class="k">delete</span><span class="p">;</span>
+  <span class="n">thread_guard</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="n">thread_guard</span> <span class="k">const</span><span class="o">&amp;</span><span class="p">)</span><span class="o">=</span><span class="k">delete</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">struct</span> <span class="n">func</span> <span class="p">{</span>
+  <span class="kt">int</span><span class="o">&amp;</span> <span class="n">i</span><span class="p">;</span>
+
+  <span class="n">func</span><span class="p">(</span><span class="kt">int</span><span class="o">&amp;</span> <span class="n">i_</span><span class="p">)</span><span class="o">:</span><span class="n">i</span><span class="p">(</span><span class="n">i_</span><span class="p">)</span> <span class="p">{</span>
+
+  <span class="p">}</span>
+
+  <span class="kt">void</span> <span class="k">operator</span><span class="p">()()</span> <span class="p">{</span>
+    <span class="n">cout</span><span class="o">&lt;&lt;</span><span class="s">&quot;State is : &quot;</span><span class="o">&lt;&lt;</span><span class="n">i</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="kt">int</span> <span class="n">some_local_state</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="n">func</span> <span class="n">my_func</span><span class="p">(</span><span class="n">some_local_state</span><span class="p">);</span>
+  <span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="n">t</span><span class="p">(</span><span class="n">my_func</span><span class="p">);</span>
+  <span class="n">thread_guard</span> <span class="n">g</span><span class="p">(</span><span class="n">t</span><span class="p">);</span>
+
+  <span class="n">cout</span><span class="o">&lt;&lt;</span><span class="s">&quot;Doing something in the main thread&quot;</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span>
+
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="running-threads-in-the-background">
+<h3>Running threads in the background<a class="headerlink" href="#running-threads-in-the-background" title="Permalink to this headline">¶</a></h3>
+<p>Calling <code class="docutils literal notranslate"><span class="pre">detach()</span></code> on a std::thread object leaves the thread to run in the background,
+with no direct means of communicating with it.</p>
+<p>you can only call <code class="docutils literal notranslate"><span class="pre">t.detach()</span></code> for a <code class="docutils literal notranslate"><span class="pre">std::thread</span></code> object <code class="docutils literal notranslate"><span class="pre">t</span></code> when
+<code class="docutils literal notranslate"><span class="pre">t.joinable()</span></code> returns true.</p>
+</div>
+</div>
+<div class="section" id="passing-arguments-to-a-thread-function">
+<h2>Passing arguments to a thread function<a class="headerlink" href="#passing-arguments-to-a-thread-function" title="Permalink to this headline">¶</a></h2>
+<p>It’s important to bear in mind that by default the arguments are <strong>copied</strong> into internal
+storage, where they can be accessed by the newly created thread of execution,
+even if the corresponding parameter in the function is expecting a reference.</p>
+<p>you need to wrap the arguments that really need to be references in <code class="docutils literal notranslate"><span class="pre">std::ref</span></code>.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="n">t</span><span class="p">(</span><span class="n">update_data_for_widget</span><span class="p">,</span><span class="n">w</span><span class="p">,</span><span class="n">std</span><span class="o">::</span><span class="n">ref</span><span class="p">(</span><span class="n">data</span><span class="p">));</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="transferring-ownership-of-a-thread">
+<h2>Transferring ownership of a thread<a class="headerlink" href="#transferring-ownership-of-a-thread" title="Permalink to this headline">¶</a></h2>
+<p>Suppose you want to write a function that creates a thread to run in the background
+but passes back ownership of the new thread to the calling function rather than waiting
+for it to complete, or maybe you want to do the reverse: create a thread and pass
+ownership in to some function that should wait for it to complete. In either case, you
+need to transfer ownership from one place to another.</p>
+<p>This is where the move support of <code class="docutils literal notranslate"><span class="pre">std::thread</span></code> comes in.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">some_function</span><span class="p">();</span>
+<span class="kt">void</span> <span class="nf">some_other_function</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="n">t1</span><span class="p">(</span><span class="n">some_function</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="n">t2</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">t1</span><span class="p">);</span>
+<span class="n">t1</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="p">(</span><span class="n">some_other_function</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="n">t3</span><span class="p">;</span>
+<span class="n">t3</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">t2</span><span class="p">);</span>
+<span class="n">t1</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">t3</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="choosing-the-number-of-threads-at-runtime">
+<h2>Choosing the number of threads at runtime<a class="headerlink" href="#choosing-the-number-of-threads-at-runtime" title="Permalink to this headline">¶</a></h2>
+<p>One feature of the C++ Standard Library that helps here is <code class="docutils literal notranslate"><span class="pre">std::thread::hardware_concurrency()</span></code>.
+This function returns an indication of the number of threads that can
+truly run concurrently for a given execution of a program.</p>
+</div>
+<div class="section" id="identifying-threads">
+<h2>Identifying threads<a class="headerlink" href="#identifying-threads" title="Permalink to this headline">¶</a></h2>
+<p>Thread identifiers are of type std::thread::id and can be retrieved in two ways.</p>
+<ol class="arabic simple">
+<li>the identifier for a thread can be obtained from its associated <code class="docutils literal notranslate"><span class="pre">std::thread</span></code>
+object by calling the <code class="docutils literal notranslate"><span class="pre">get_id()</span></code> member function.</li>
+<li>the identifier for the current thread can be obtained by calling <code class="docutils literal notranslate"><span class="pre">std::this_thread::get_id()</span></code>.</li>
+</ol>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="C++ Concurrency in Action Learning Notes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Jackson Fu.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

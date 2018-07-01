@@ -1,0 +1,198 @@
+================
+Managing threads
+================
+
+Basic thread management
+=======================
+
+Launching a thread
+------------------
+
+Starting a thread using the C++ Thread Library always
+boils down to constructing a std::thread object:
+
+.. code-block:: c++
+
+   #include <iostream>
+   #include <thread>
+   
+   using namespace std;
+   
+   void do_some_work()
+   {
+     cout<<"I'm doing some work in the thread."<<endl;
+   }
+   
+   int main()
+   {
+     std::thread my_thread(do_some_work);
+     return 0;
+   }
+
+As with much of the C++ Standard Library, ``std::thread`` works with any
+**callable** type, so you can pass an instance of a class with a function call operator to the
+``std::thread`` constructor instead:
+
+.. code-block:: c++
+
+   class background_task
+   {
+   public:
+   void operator()() const
+   {
+   do_something();
+   do_something_else();
+   }
+   };
+   background_task f;
+   std::thread my_thread(f);
+
+.. note::
+
+   One thing to consider when passing a function object to the thread constructor
+   is to avoid what is dubbed **C++’s most vexing parse**.
+
+The following are wrong:
+
+.. code-block:: c++
+
+   std::thread my_thread(background_task());
+
+Using the following syntax instead:
+
+.. code-block:: c++
+
+   std::thread my_thread((background_task()));
+   std::thread my_thread{background_task()};
+
+Using a lambda expression:
+
+.. code-block:: c++
+
+   std::thread my_thread([](
+          do_something();
+          do_something_else();
+   });
+
+Waiting for a thread to complete
+--------------------------------
+
+``join()`` is simple and brute force—either you wait for a thread to finish or you
+don’t. If you need more fine-grained control over waiting for a thread, such as to
+check whether a thread is finished, or to wait only a certain period of time, then you
+have to use alternative mechanisms such as condition variables and futures. 
+
+you can call join() only once for a given thread; once you’ve called join(), the std::thread
+object is no longer joinable, and joinable() will return false.
+
+.. code-block:: c++
+
+   #include <iostream>
+   #include <thread>
+   
+   using namespace std;
+   
+   class thread_guard
+   {
+     std::thread& t;
+   public:
+     explicit thread_guard(std::thread& t_):
+       t(t_)
+     {}
+     ~thread_guard()
+     {
+       if(t.joinable())
+         {
+           t.join();
+         }
+     }
+     thread_guard(thread_guard const&)=delete;
+     thread_guard& operator=(thread_guard const&)=delete;
+   };
+   
+   struct func {
+     int& i;
+   
+     func(int& i_):i(i_) {
+       
+     }
+     
+     void operator()() {
+       cout<<"State is : "<<i<<endl;
+     }
+   };
+   
+   int main()
+   {
+     int some_local_state = 0;
+     func my_func(some_local_state);
+     std::thread t(my_func);
+     thread_guard g(t);
+   
+     cout<<"Doing something in the main thread"<<endl;
+     
+     return 0;
+   }
+      
+
+Running threads in the background
+---------------------------------
+
+Calling ``detach()`` on a std::thread object leaves the thread to run in the background,
+with no direct means of communicating with it.
+
+you can only call ``t.detach()`` for a ``std::thread`` object ``t`` when
+``t.joinable()`` returns true.
+
+
+Passing arguments to a thread function
+======================================
+
+It’s important to bear in mind that by default the arguments are **copied** into internal
+storage, where they can be accessed by the newly created thread of execution,
+even if the corresponding parameter in the function is expecting a reference.
+
+you need to wrap the arguments that really need to be references in ``std::ref``.
+
+.. code-block:: c++
+
+   std::thread t(update_data_for_widget,w,std::ref(data));
+
+Transferring ownership of a thread
+==================================
+
+Suppose you want to write a function that creates a thread to run in the background
+but passes back ownership of the new thread to the calling function rather than waiting
+for it to complete, or maybe you want to do the reverse: create a thread and pass
+ownership in to some function that should wait for it to complete. In either case, you
+need to transfer ownership from one place to another.
+
+This is where the move support of ``std::thread`` comes in.
+
+.. code-block:: c++
+
+   void some_function();
+   void some_other_function();
+   std::thread t1(some_function);
+   std::thread t2=std::move(t1);
+   t1=std::thread(some_other_function);
+   std::thread t3;
+   t3=std::move(t2);
+   t1=std::move(t3);
+
+Choosing the number of threads at runtime
+=========================================
+
+One feature of the C++ Standard Library that helps here is ``std::thread::hardware_concurrency()``.
+This function returns an indication of the number of threads that can
+truly run concurrently for a given execution of a program.
+
+Identifying threads
+===================
+
+Thread identifiers are of type std::thread::id and can be retrieved in two ways.
+
+1. the identifier for a thread can be obtained from its associated ``std::thread``
+   object by calling the ``get_id()`` member function.
+
+2. the identifier for the current thread can be obtained by calling ``std::this_thread::get_id()``.
